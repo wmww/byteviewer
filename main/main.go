@@ -14,24 +14,23 @@ var (
 	inputFile        string
 	startByte        int
 	lengthBytes      int
-	enableColors     bool
+	disableColors    bool
 	colorWidth       int
 	enableOffsets    bool
-	enablePosition   bool
+	enablePosition   = true
 )
 
 func init() {
 	for i, e := range encodings {
 		flag.BoolVar(&encodings[i].Enabled, e.Name, false, e.Desc)
 	}
-	flag.StringVar(&inputFile, "f", "", "The file to read input from (stdin by default)")
-	flag.IntVar(&startByte, "s", 0, "The byte to start reading at")
-	flag.IntVar(&lengthBytes, "l", 0, "The number of bytes to read")
-	flag.BoolVar(&enableColors, "c", false, "Decorate output with rainbow colors")
-	flag.IntVar(&colorWidth, "cw", 2, "Width in bytes of each color")
-	flag.BoolVar(&enableOffsets, "o", false, "Show multi-byte values for every offset")
-	flag.IntVar(&bufferSize, "w", 8, "How many bytes to print per line")
-	flag.BoolVar(&enablePosition, "pos", false, "Show the position in bytes within the file")
+	flag.StringVar(&inputFile, "f", "", "File to read input from (stdin by default)")
+	flag.IntVar(&startByte, "s", 0, "Start position in bytes")
+	flag.IntVar(&lengthBytes, "l", 0, "Length in bytes to read")
+	flag.BoolVar(&disableColors, "C", false, "Disable colors")
+	flag.IntVar(&colorWidth, "cw", 2, "Width of each color")
+	flag.BoolVar(&enableOffsets, "o", false, "Show all offsets for multi-byte data types")
+	flag.IntVar(&bufferSize, "w", 8, "Width of each output lines in bytes")
 	flag.Parse()
 
 	for _, e := range encodings {
@@ -83,7 +82,7 @@ func processLine(chunk []byte, position int) {
 			ln += fmt.Sprintf("%8d  ", position - bufferSize)
 		}
 		ln += encoded
-		if (enableColors) {
+		if (!disableColors) {
 			ln += "\x1b[0m"
 		}
 		fmt.Fprintln(os.Stdout, ln)

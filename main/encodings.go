@@ -55,7 +55,7 @@ func (e *encoding) Encode(chunk []byte) string {
 				encoded = fmt.Sprintf("%*s%s", paddingSize - encodedLen, "", encoded)
 			}
 			outputVisibleLen += utf8.RuneCountInString(encoded)
-			if (enableColors) {
+			if (!disableColors) {
 				colorIndex := ((e.total + start) / colorWidth) % len(termColors)
 				encoded = "\x1b[1;" + termColors[colorIndex] + "m" + encoded
 			}
@@ -206,7 +206,7 @@ var encodings = []encoding{
 		Enabled:    false,
 		ByteLength: 2,
 		Separator:  `,`,
-		MaxWidth:   11,
+		MaxWidth:   6,
 		Desc:       `Unsigned 16-bit integer`,
 	},
 	{
@@ -217,7 +217,7 @@ var encodings = []encoding{
 		Enabled:    false,
 		ByteLength: 4,
 		Separator:  `,`,
-		MaxWidth:   10,
+		MaxWidth:   11,
 		Desc:       `Signed 32-bit integer`,
 	},
 	{
