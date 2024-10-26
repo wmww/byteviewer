@@ -12,7 +12,8 @@ var (
 	enabledEncodings = []encoding{}
 	bufferSize       int
 	inputFile        string
-	numLines         int
+	startByte        int
+	lengthBytes      int
 	enableColors     bool
 	colorWidth       int
 	enableOffsets    bool
@@ -24,12 +25,13 @@ func init() {
 		flag.BoolVar(&encodings[i].Enabled, e.Name, false, e.Desc)
 	}
 	flag.StringVar(&inputFile, "file", "", "The file to read input from (stdin by default)")
+	flag.IntVar(&startByte, "start", 0, "The byte to start reading at")
+	flag.IntVar(&lengthBytes, "length", 0, "The number of bytes to read")
 	flag.BoolVar(&enablePosition, "pos", false, "Show the position in bytes within the file")
 	flag.BoolVar(&enableColors, "color", false, "Decorate output with rainbow colors")
 	flag.IntVar(&colorWidth, "colorWidth", 2, "Width in bytes of each color")
 	flag.BoolVar(&enableOffsets, "offsets", false, "Show multi-byte values for every offset")
 	flag.IntVar(&bufferSize, "width", 8, "How many bytes to print per line")
-	flag.IntVar(&numLines, "n", 0, "How many lines to print")
 	flag.Parse()
 
 	for _, e := range encodings {
@@ -64,7 +66,7 @@ func printHeader(enc []encoding) {
 	}
 	fmt.Fprintln(os.Stdout, sep)
 }
-func processLine(chunk []byte, idx int, position int) {
+func processLine(chunk []byte, position int) {
 
 	var ln string
 	if enablePosition {
@@ -99,9 +101,9 @@ func main() {
 
 	// read full buffer
 
-	idx := 0
-	position := 0
 	printHeader(enabledEncodings)
+	_, _ = io.CopyN(io.Discard, reader, int64(startByte))
+	position := startByte
 
 ReadLoop:
 	for {
@@ -110,7 +112,7 @@ ReadLoop:
 
 		if err != nil {
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
-				processLine(chunk[:n], idx, position)
+				processLine(chunk[:n], position)
 				break ReadLoop
 			}
 			fmt.Fprintln(os.Stderr, "error reading input:", err)
@@ -118,13 +120,11 @@ ReadLoop:
 		}
 
 		// Only process the bytes that were actually read
-		processLine(chunk[:n], idx, position)
+		processLine(chunk[:n], position)
 
-		if idx >= numLines && numLines != 0 {
-			break
-		}
-
-		idx++
 		position += n
+		if lengthBytes > 0 && position > startByte + lengthBytes {
+			break;
+		}
 	}
 }
