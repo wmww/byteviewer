@@ -16,6 +16,7 @@ var (
 	enableColors     bool
 	colorWidth       int
 	enableOffsets    bool
+	enablePosition   bool
 )
 
 func init() {
@@ -23,6 +24,7 @@ func init() {
 		flag.BoolVar(&encodings[i].Enabled, e.Name, false, e.Desc)
 	}
 	flag.StringVar(&inputFile, "file", "", "The file to read input from (stdin by default)")
+	flag.BoolVar(&enablePosition, "pos", false, "Show the position in bytes within the file")
 	flag.BoolVar(&enableColors, "color", false, "Decorate output with rainbow colors")
 	flag.IntVar(&colorWidth, "colorWidth", 2, "Width in bytes of each color")
 	flag.BoolVar(&enableOffsets, "offsets", false, "Show multi-byte values for every offset")
@@ -47,6 +49,9 @@ func init() {
 }
 func printHeader(enc []encoding) {
 	sepWidth := 0
+	if enablePosition {
+		fmt.Fprint(os.Stdout, "position  ")
+	}
 	for _, e := range enc {
 		stri := fmt.Sprintf("%-*s ", e.EncodingWidth(bufferSize) + 2, e.Name)
 		sepWidth += len(stri)
@@ -59,9 +64,12 @@ func printHeader(enc []encoding) {
 	}
 	fmt.Fprintln(os.Stdout, sep)
 }
-func processLine(chunk []byte, idx int) {
+func processLine(chunk []byte, idx int, position int) {
 
 	var ln string
+	if enablePosition {
+		ln += fmt.Sprintf("%8d  ", position)
+	}
 	for i := 0; i < len(enabledEncodings); i++ {
 		ln += enabledEncodings[i].Encode(chunk) + "   "
 	}
@@ -76,7 +84,6 @@ func main() {
 		fmt.Fprintln(os.Stderr, "width must be >0")
 		return
 	}
-
 
 	// Create a buffered reader
 	reader := bufio.NewReader(os.Stdin);
@@ -93,6 +100,7 @@ func main() {
 	// read full buffer
 
 	idx := 0
+	position := 0
 	printHeader(enabledEncodings)
 
 ReadLoop:
@@ -102,7 +110,7 @@ ReadLoop:
 
 		if err != nil {
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
-				processLine(chunk[:n], idx)
+				processLine(chunk[:n], idx, position)
 				break ReadLoop
 			}
 			fmt.Fprintln(os.Stderr, "error reading input:", err)
@@ -110,12 +118,13 @@ ReadLoop:
 		}
 
 		// Only process the bytes that were actually read
-		processLine(chunk[:n], idx)
+		processLine(chunk[:n], idx, position)
 
 		if idx >= numLines && numLines != 0 {
 			break
 		}
 
 		idx++
+		position += n
 	}
 }
