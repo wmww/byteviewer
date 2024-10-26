@@ -216,7 +216,7 @@ var encodings = []encoding{
 	{
 		Name: "f32",
 		EncoderFunc: func(b []byte) (string, int) {
-			return fmt.Sprintf("%12.6f", math.Float32frombits(binary.BigEndian.Uint32(b))), len(b)
+			return fmt.Sprintf("%12.6f", math.Float32frombits(binary.LittleEndian.Uint32(b))), len(b)
 		},
 		Enabled:    false,
 		ByteLength: 4,
@@ -227,7 +227,7 @@ var encodings = []encoding{
 	{
 		Name: "i64",
 		EncoderFunc: func(b []byte) (string, int) {
-			return fmt.Sprintf("%d", int64(binary.BigEndian.Uint64(b))), len(b)
+			return fmt.Sprintf("%d", int64(binary.LittleEndian.Uint64(b))), len(b)
 		},
 		Enabled:    false,
 		ByteLength: 8,
@@ -238,7 +238,7 @@ var encodings = []encoding{
 	{
 		Name: "u64",
 		EncoderFunc: func(b []byte) (string, int) {
-			return fmt.Sprintf("%d", binary.BigEndian.Uint64(b)), len(b)
+			return fmt.Sprintf("%d", binary.LittleEndian.Uint64(b)), len(b)
 		},
 		Enabled:    false,
 		ByteLength: 8,
@@ -249,7 +249,7 @@ var encodings = []encoding{
 	{
 		Name: "f64",
 		EncoderFunc: func(b []byte) (string, int) {
-			return fmt.Sprintf("%12.6f", math.Float64frombits(binary.BigEndian.Uint64(b))), len(b)
+			return fmt.Sprintf("%12.6f", math.Float64frombits(binary.LittleEndian.Uint64(b))), len(b)
 		},
 		Enabled:    false,
 		ByteLength: 8,
