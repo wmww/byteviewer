@@ -16,7 +16,7 @@ sudo mv byteviewer /usr/local/bin
 Simply read from any standard input and flag all the formats you want to display, like so:
 
 ```bash
-cat myfile | byteviewer -int32 -hex -uint8
+cat myfile | byteviewer -i32 -hex -u8
 
 uint8                           int32                 hex
 -----------------------------------------------------------------------
@@ -39,16 +39,16 @@ to read directly from a file.
 
 Supported formats (WIP):
 
-1. int8
-2. uint8
-3. int16
-4. uint16
-5. int32
-6. uint32
-7. float32
-8. int64
-9. uint64
-10. float64
+1. i8
+2. u8
+3. i16
+4. u16
+5. i32
+6. u32
+7. f32
+8. i64
+9. u64
+10. f64
 11. hex
 12. ascii
 13. utf8

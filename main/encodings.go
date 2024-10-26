@@ -148,7 +148,7 @@ func (e *encoding) EncodingWidth(bytewidth int) int {
 
 var encodings = []encoding{
 	{
-		Name: "int8",
+		Name: "i8",
 		EncoderFunc: func(b []byte) (string, int) {
 			return fmt.Sprintf("%d", int8(b[0])), len(b)
 		},
@@ -159,7 +159,7 @@ var encodings = []encoding{
 		Desc:       `Signed 8-bit integer`,
 	},
 	{
-		Name: "uint8",
+		Name: "u8",
 		EncoderFunc: func(b []byte) (string, int) {
 			return fmt.Sprintf("%d", uint8(b[0])), len(b)
 		},
@@ -170,7 +170,7 @@ var encodings = []encoding{
 		Desc:       `Unsigned 8-bit integer`,
 	},
 	{
-		Name: "int16",
+		Name: "i16",
 		EncoderFunc: func(b []byte) (string, int) {
 			return fmt.Sprintf("%d", int16(binary.LittleEndian.Uint16(b))), len(b)
 		},
@@ -181,7 +181,7 @@ var encodings = []encoding{
 		Desc:       `Signed 16-bit integer`,
 	},
 	{
-		Name: "uint16",
+		Name: "u16",
 		EncoderFunc: func(b []byte) (string, int) {
 			return fmt.Sprintf("%d", binary.LittleEndian.Uint16(b)), len(b)
 		},
@@ -192,7 +192,7 @@ var encodings = []encoding{
 		Desc:       `Unsigned 16-bit integer`,
 	},
 	{
-		Name: "int32",
+		Name: "i32",
 		EncoderFunc: func(b []byte) (string, int) {
 			return fmt.Sprintf("%d", int32(binary.LittleEndian.Uint32(b))), len(b)
 		},
@@ -203,7 +203,7 @@ var encodings = []encoding{
 		Desc:       `Signed 32-bit integer`,
 	},
 	{
-		Name: "uint32",
+		Name: "u32",
 		EncoderFunc: func(b []byte) (string, int) {
 			return fmt.Sprintf("%d", binary.LittleEndian.Uint32(b)), len(b)
 		},
@@ -214,7 +214,7 @@ var encodings = []encoding{
 		Desc:       `Unsigned 32-bit integer`,
 	},
 	{
-		Name: "float32",
+		Name: "f32",
 		EncoderFunc: func(b []byte) (string, int) {
 			return fmt.Sprintf("%12.6f", math.Float32frombits(binary.BigEndian.Uint32(b))), len(b)
 		},
@@ -225,7 +225,7 @@ var encodings = []encoding{
 		Desc:       `IEEE 754 single-precision binary floating-point format: sign bit, 8 bits exponent, 23 bits mantissa`,
 	},
 	{
-		Name: "int64",
+		Name: "i64",
 		EncoderFunc: func(b []byte) (string, int) {
 			return fmt.Sprintf("%d", int64(binary.BigEndian.Uint64(b))), len(b)
 		},
@@ -236,7 +236,7 @@ var encodings = []encoding{
 		Desc:       `Signed 64-bit integer`,
 	},
 	{
-		Name: "uint64",
+		Name: "u64",
 		EncoderFunc: func(b []byte) (string, int) {
 			return fmt.Sprintf("%d", binary.BigEndian.Uint64(b)), len(b)
 		},
@@ -247,7 +247,7 @@ var encodings = []encoding{
 		Desc:       `Unsigned 64-bit integer`,
 	},
 	{
-		Name: "float64",
+		Name: "f64",
 		EncoderFunc: func(b []byte) (string, int) {
 			return fmt.Sprintf("%12.6f", math.Float64frombits(binary.BigEndian.Uint64(b))), len(b)
 		},
@@ -267,7 +267,7 @@ var encodings = []encoding{
 		Desc:        `Hexadecimal encoding`,
 	},
 	{
-		Name:        "utf8hex",
+		Name:        "utf8h",
 		EncoderFunc: func(b []byte) (string, int) {
 			r, consumed := utf8GetRune(b)
 			if consumed > 0 {
@@ -283,7 +283,7 @@ var encodings = []encoding{
 		Desc:        `Unicode code points of UTF-8 encoded text. Hexadecimal.`,
 	},
 	{
-		Name:        "utf8int",
+		Name:        "utf8i",
 		EncoderFunc: func(b []byte) (string, int) {
 			r, consumed := utf8GetRune(b)
 			if consumed > 0 {
