@@ -36,11 +36,14 @@ func (e *encoding) Encode(chunk []byte) string {
 	output := make([]string, 0)
 	increment := max(e.ByteLength, 1)
 	paddingSize := -(len(e.buffer) * (e.MaxWidth + len(e.Separator)) / increment)
+	if e.ByteLength > 0 {
+		paddingSize = 0
+	}
 	start := 0
 	outputVisibleLen := 0
 	e.buffer = append(e.buffer, chunk...)
 	// loop by bytelength at a time
-	for end := increment; end <= len(e.buffer); end += increment {
+	for end := increment; end <= len(e.buffer); {
 		encoded, consumed := e.EncoderFunc(e.buffer[start:end])
 		encodedLen := utf8.RuneCountInString(encoded)
 		if encodedLen > 0 {
@@ -58,7 +61,16 @@ func (e *encoding) Encode(chunk []byte) string {
 		} else {
 			paddingSize += e.MaxWidth + len(e.Separator)
 		}
-		start += consumed
+		if consumed == 0 {
+			end += increment
+		} else {
+			if enableOffsets {
+				start += 1
+			} else {
+				start += consumed
+			}
+			end = start + increment
+		}
 	}
 	e.buffer = e.buffer[start:]
 	e.total += start
@@ -143,6 +155,9 @@ func utf8GetRune(chunk []byte) (rune, int) {
 
 func (e *encoding) EncodingWidth(bytewidth int) int {
 	numEntries := bytewidth / max(e.ByteLength, 1)
+	if enableOffsets {
+		numEntries = bytewidth
+	}
 	return ((e.MaxWidth * numEntries) + (numEntries - 1) * len(e.Separator)) // separators
 }
 
