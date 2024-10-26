@@ -57,7 +57,7 @@ func printHeader(enc []encoding) {
 		sepWidth += len(str)
 	}
 	for _, e := range enc {
-		stri := fmt.Sprintf("%-*s ", e.EncodingWidth(bufferSize) + 2, e.Name)
+		stri := fmt.Sprintf("%-*s  ", e.EncodingWidth(bufferSize), e.Name)
 		sepWidth += len(stri)
 		fmt.Fprint(os.Stdout, stri)
 	}
@@ -70,17 +70,24 @@ func printHeader(enc []encoding) {
 }
 func processLine(chunk []byte, position int) {
 
-	var ln string
-	if enablePosition {
-		ln += fmt.Sprintf("%8d  ", position)
-	}
+	var encoded string
 	for i := 0; i < len(enabledEncodings); i++ {
-		ln += enabledEncodings[i].Encode(chunk) + "   "
+		encoded += enabledEncodings[i].Encode(chunk)
+		if len(encoded) > 0 {
+			encoded += "  "
+		}
 	}
-	if (enableColors) {
-		ln += "\x1b[0m"
+	if len(encoded) > 0 {
+		var ln string
+		if enablePosition {
+			ln += fmt.Sprintf("%8d  ", position - bufferSize)
+		}
+		ln += encoded
+		if (enableColors) {
+			ln += "\x1b[0m"
+		}
+		fmt.Fprintln(os.Stdout, ln)
 	}
-	fmt.Fprintln(os.Stdout, ln)
 
 }
 func main() {
@@ -115,6 +122,7 @@ ReadLoop:
 		if err != nil {
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				processLine(chunk[:n], position)
+				processLine([]byte{}, position)
 				break ReadLoop
 			}
 			fmt.Fprintln(os.Stderr, "error reading input:", err)

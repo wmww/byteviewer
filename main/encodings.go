@@ -32,7 +32,6 @@ var termColors = []string{
 }
 
 func (e *encoding) Encode(chunk []byte) string {
-
 	output := make([]string, 0)
 	increment := max(e.ByteLength, 1)
 	paddingSize := -(len(e.buffer) * (e.MaxWidth + len(e.Separator)) / increment)
@@ -40,10 +39,14 @@ func (e *encoding) Encode(chunk []byte) string {
 		paddingSize = 0
 	}
 	start := 0
+	maxStart := len(e.buffer)
 	outputVisibleLen := 0
 	e.buffer = append(e.buffer, chunk...)
-	// loop by bytelength at a time
-	for end := increment; end <= len(e.buffer); {
+	end := increment
+	if maxStart == 0 {
+		return ""
+	}
+	for start < maxStart && end <= len(e.buffer) {
 		encoded, consumed := e.EncoderFunc(e.buffer[start:end])
 		encodedLen := utf8.RuneCountInString(encoded)
 		if encodedLen > 0 {
