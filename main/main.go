@@ -35,7 +35,7 @@ func init() {
 	}
 	if len(enabledEncodings) == 0 {
 		for i, e := range encodings {
-			if e.Name == "hex" || e.Name == "ascii" || e.Name == "int8" {
+			if e.Name == "hex" || e.Name == "utf8" || e.Name == "u8" {
 				encodings[i].Enabled = true
 				enabledEncodings = append(enabledEncodings, e)
 			}
