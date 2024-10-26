@@ -52,7 +52,9 @@ func init() {
 func printHeader(enc []encoding) {
 	sepWidth := 0
 	if enablePosition {
-		fmt.Fprint(os.Stdout, "position  ")
+		str := "position  "
+		fmt.Fprint(os.Stdout, str)
+		sepWidth += len(str)
 	}
 	for _, e := range enc {
 		stri := fmt.Sprintf("%-*s ", e.EncodingWidth(bufferSize) + 2, e.Name)
