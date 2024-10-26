@@ -53,7 +53,7 @@ func (e *encoding) Encode(chunk []byte) string {
 			}
 			outputVisibleLen += utf8.RuneCountInString(encoded)
 			if (enableColors) {
-				colorIndex := ((e.total + end - 1) / colorWidth) % len(termColors)
+				colorIndex := ((e.total + start) / colorWidth) % len(termColors)
 				encoded = "\x1b[1;" + termColors[colorIndex] + "m" + encoded
 			}
 			paddingSize = 0
