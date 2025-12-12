@@ -11,7 +11,7 @@ import (
 
 type encoding struct {
 	Name        string
-	EncoderFunc func([]byte) (string, int)
+	EncoderFunc func([]byte) (string, int, bool)
 	Enabled     bool
 	ByteLength  int
 	// single character separator
@@ -47,7 +47,7 @@ func (e *encoding) Encode(chunk []byte) string {
 		return ""
 	}
 	for start < maxStart && end <= len(e.buffer) {
-		encoded, consumed := e.EncoderFunc(e.buffer[start:end])
+		encoded, consumed, important := e.EncoderFunc(e.buffer[start:end])
 		encodedLen := utf8.RuneCountInString(encoded)
 		if encodedLen > 0 {
 			paddingSize += e.MaxWidth
@@ -57,7 +57,11 @@ func (e *encoding) Encode(chunk []byte) string {
 			outputVisibleLen += utf8.RuneCountInString(encoded)
 			if (!disableColors) {
 				colorIndex := ((e.total + start) / colorWidth) % len(termColors)
-				encoded = "\x1b[1;" + termColors[colorIndex] + "m" + encoded
+				var brightness = "1" // bold
+				if !important {
+					brightness = "2" // faint
+				}
+				encoded = "\x1b[" + brightness + ";" + termColors[colorIndex] + "m" + encoded
 			}
 			paddingSize = 0
 			output = append(output, encoded)
@@ -121,10 +125,12 @@ var mapInvalidChar = map[uint8]rune{
 	'\x00': '␀',
 }
 
-func parseASCII(chunk []byte) (string, int) {
+func parseASCII(chunk []byte) (string, int, bool) {
 	var output string
+	var important = false
 	for _, b := range chunk {
 		if b >= 32 && b <= 126 { // Printable ASCII range
+			important = true
 			rn, ok := mapInvalidChar[b]
 			if ok {
 				output += fmt.Sprintf("%c", rn)
@@ -135,7 +141,7 @@ func parseASCII(chunk []byte) (string, int) {
 			output += "." // Non-printable characters are represented as a dot
 		}
 	}
-	return output, len(chunk)
+	return output, len(chunk), important
 
 }
 
@@ -167,8 +173,9 @@ func (e *encoding) EncodingWidth(bytewidth int) int {
 var encodings = []encoding{
 	{
 		Name: "i8",
-		EncoderFunc: func(b []byte) (string, int) {
-			return fmt.Sprintf("%d", int8(b[0])), len(b)
+		EncoderFunc: func(b []byte) (string, int, bool) {
+			var val = int8(b[0])
+			return fmt.Sprintf("%d", val), len(b), true
 		},
 		Enabled:    false,
 		ByteLength: 1,
@@ -178,8 +185,9 @@ var encodings = []encoding{
 	},
 	{
 		Name: "u8",
-		EncoderFunc: func(b []byte) (string, int) {
-			return fmt.Sprintf("%d", uint8(b[0])), len(b)
+		EncoderFunc: func(b []byte) (string, int, bool) {
+			var val = uint8(b[0])
+			return fmt.Sprintf("%d", val), len(b), true
 		},
 		Enabled:    false,
 		ByteLength: 1,
@@ -189,8 +197,9 @@ var encodings = []encoding{
 	},
 	{
 		Name: "i16",
-		EncoderFunc: func(b []byte) (string, int) {
-			return fmt.Sprintf("%d", int16(binary.LittleEndian.Uint16(b))), len(b)
+		EncoderFunc: func(b []byte) (string, int, bool) {
+			var val = int16(binary.LittleEndian.Uint16(b))
+			return fmt.Sprintf("%d", val), len(b), val < 8192 && val > -8192
 		},
 		Enabled:    false,
 		ByteLength: 2,
@@ -200,8 +209,9 @@ var encodings = []encoding{
 	},
 	{
 		Name: "u16",
-		EncoderFunc: func(b []byte) (string, int) {
-			return fmt.Sprintf("%d", binary.LittleEndian.Uint16(b)), len(b)
+		EncoderFunc: func(b []byte) (string, int, bool) {
+			var val = binary.LittleEndian.Uint16(b)
+			return fmt.Sprintf("%d", val), len(b), val < 8192
 		},
 		Enabled:    false,
 		ByteLength: 2,
@@ -211,8 +221,8 @@ var encodings = []encoding{
 	},
 	{
 		Name: "i32",
-		EncoderFunc: func(b []byte) (string, int) {
-			return fmt.Sprintf("%d", int32(binary.LittleEndian.Uint32(b))), len(b)
+		EncoderFunc: func(b []byte) (string, int, bool) {
+			return fmt.Sprintf("%d", int32(binary.LittleEndian.Uint32(b))), len(b), true
 		},
 		Enabled:    false,
 		ByteLength: 4,
@@ -222,8 +232,8 @@ var encodings = []encoding{
 	},
 	{
 		Name: "u32",
-		EncoderFunc: func(b []byte) (string, int) {
-			return fmt.Sprintf("%d", binary.LittleEndian.Uint32(b)), len(b)
+		EncoderFunc: func(b []byte) (string, int, bool) {
+			return fmt.Sprintf("%d", binary.LittleEndian.Uint32(b)), len(b), true
 		},
 		Enabled:    false,
 		ByteLength: 4,
@@ -233,8 +243,8 @@ var encodings = []encoding{
 	},
 	{
 		Name: "f32",
-		EncoderFunc: func(b []byte) (string, int) {
-			return fmt.Sprintf("%.6g", math.Float32frombits(binary.LittleEndian.Uint32(b))), len(b)
+		EncoderFunc: func(b []byte) (string, int, bool) {
+			return fmt.Sprintf("%.6g", math.Float32frombits(binary.LittleEndian.Uint32(b))), len(b), true
 		},
 		Enabled:    false,
 		ByteLength: 4,
@@ -244,8 +254,8 @@ var encodings = []encoding{
 	},
 	{
 		Name: "i64",
-		EncoderFunc: func(b []byte) (string, int) {
-			return fmt.Sprintf("%d", int64(binary.LittleEndian.Uint64(b))), len(b)
+		EncoderFunc: func(b []byte) (string, int, bool) {
+			return fmt.Sprintf("%d", int64(binary.LittleEndian.Uint64(b))), len(b), true
 		},
 		Enabled:    false,
 		ByteLength: 8,
@@ -255,8 +265,8 @@ var encodings = []encoding{
 	},
 	{
 		Name: "u64",
-		EncoderFunc: func(b []byte) (string, int) {
-			return fmt.Sprintf("%d", binary.LittleEndian.Uint64(b)), len(b)
+		EncoderFunc: func(b []byte) (string, int, bool) {
+			return fmt.Sprintf("%d", binary.LittleEndian.Uint64(b)), len(b), true
 		},
 		Enabled:    false,
 		ByteLength: 8,
@@ -266,8 +276,8 @@ var encodings = []encoding{
 	},
 	{
 		Name: "f64",
-		EncoderFunc: func(b []byte) (string, int) {
-			return fmt.Sprintf("%.6g", math.Float64frombits(binary.LittleEndian.Uint64(b))), len(b)
+		EncoderFunc: func(b []byte) (string, int, bool) {
+			return fmt.Sprintf("%.6g", math.Float64frombits(binary.LittleEndian.Uint64(b))), len(b), true
 		},
 		Enabled:    false,
 		ByteLength: 8,
@@ -277,7 +287,9 @@ var encodings = []encoding{
 	},
 	{
 		Name:        "hex",
-		EncoderFunc: func(b []byte) (string, int) { return fmt.Sprintf("%x", b), len(b) },
+		EncoderFunc: func(b []byte) (string, int, bool) {
+			return fmt.Sprintf("%x", b), len(b), true
+		},
 		Enabled:     false,
 		ByteLength:  1,
 		Separator:   `,`,
@@ -286,12 +298,12 @@ var encodings = []encoding{
 	},
 	{
 		Name:        "utf8h",
-		EncoderFunc: func(b []byte) (string, int) {
+		EncoderFunc: func(b []byte) (string, int, bool) {
 			r, consumed := utf8GetRune(b)
 			if consumed > 0 {
-				return fmt.Sprintf("%x", r), consumed
+				return fmt.Sprintf("%x", r), consumed, true
 			} else {
-				return "", consumed
+				return "", consumed, false
 			}
 		},
 		Enabled:     false,
@@ -302,12 +314,12 @@ var encodings = []encoding{
 	},
 	{
 		Name:        "utf8i",
-		EncoderFunc: func(b []byte) (string, int) {
+		EncoderFunc: func(b []byte) (string, int, bool) {
 			r, consumed := utf8GetRune(b)
 			if consumed > 0 {
-				return fmt.Sprintf("%d", r), consumed
+				return fmt.Sprintf("%d", r), consumed, true
 			} else {
-				return "", consumed
+				return "", consumed, false
 			}
 		},
 		Enabled:     false,
@@ -327,13 +339,13 @@ var encodings = []encoding{
 	},
 	{
 		Name:        "utf8",
-		EncoderFunc: func(b []byte) (string, int) {
+		EncoderFunc: func(b []byte) (string, int, bool) {
 			r, consumed := utf8GetRune(b)
 			if consumed > 0 {
 				// replace control chars with unicode equivalents
-				return fmt.Sprintf("%c", unicodeControlToASCII(r)), consumed
+				return fmt.Sprintf("%c", unicodeControlToASCII(r)), consumed, true
 			} else {
-				return "", consumed
+				return "", consumed, false
 			}
 		},
 		Enabled:     false,
